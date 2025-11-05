@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id           String   @id @default(cuid())
+  steamId      String   @unique
+  title        String
+  image        String
+  genres       String   // JSON string array
+  releaseDate  String
+  steamRating  Int?
+  userRating   Int      @default(0)
+  status       String   @default("Pending") // Pending, Playing, Completed, Wishlist
+  list         String   @default("None")
+  isFavorite   Boolean  @default(false)
+  developers   String   // JSON string array
+  publishers   String   // JSON string array
+  price        String?  // JSON string with price info
+  categories   String   // JSON string array
+  platforms    String   // JSON string with platform info
+  description  String?
+  isFree       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CustomList {
+  id          String   @id @default(cuid())
+  name        String
+  color       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

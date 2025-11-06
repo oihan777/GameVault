@@ -1053,6 +1053,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+                                      {game.description && (
+                          <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                            {game.description}
+                          </p>
+                        )}
               
               <div className="space-y-4">
                 <div>

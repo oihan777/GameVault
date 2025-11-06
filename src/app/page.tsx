@@ -1053,12 +1053,18 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-                                      {game.description && (
+              <div className="space-y-6">
+              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <h3 className="font-bold text-white">{game.description && (
                           <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">
                             {game.description}
                           </p>
-                        )}
-              
+                        )}</h3>
+                  </div>
+                </div>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">

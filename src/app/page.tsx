@@ -356,35 +356,61 @@ export default function Home() {
         throw new Error('Invalid file format')
       }
       
-      // Import games
+      // Import games using the two-step process: Create, then Update.
       const importPromises = data.games.map(async (gameData: any) => {
-        // Check if game already exists
+        // Check if game already exists in the current library
         const existingGame = games.find(g => g.steamId === gameData.steamId)
         if (existingGame) {
+          console.log(`Skipping already imported game: ${gameData.title}`)
           return null // Skip existing games
         }
         
-        const response = await fetch('/api/games', {
+        // --- PASO 1: Crear el juego en la base de datos ---
+        const createResponse = await fetch('/api/games', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // Enviamos los datos del juego. El API usará los datos básicos para crearlo.
           body: JSON.stringify(gameData)
         })
         
-        if (response.ok) {
-          return await response.json()
+        if (!createResponse.ok) {
+          console.error(`Failed to create game: ${gameData.title}`)
+          return null
         }
-        return null
+        
+        const newGame = await createResponse.json()
+        
+        // --- PASO 2: Actualizar el juego con los campos personalizados ---
+        const updateResponse = await fetch(`/api/games/${newGame.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: gameData.status || 'Pending', // Usamos el valor del JSON o un defecto
+            userRating: gameData.userRating || 0,
+            list: gameData.list || 'None',
+            isFavorite: gameData.isFavorite || false
+          })
+        })
+
+        if (updateResponse.ok) {
+          // Devolvemos el juego completamente actualizado
+          return await updateResponse.json()
+        } else {
+          // Si la actualización falla, devolvemos el juego recién creado (sin datos personalizados)
+          // para que al menos se añada a la biblioteca.
+          console.warn(`Game created but failed to update custom data for: ${gameData.title}`)
+          return newGame
+        }
       })
       
       const importedGames = (await Promise.all(importPromises)).filter(Boolean)
       
-      // Import custom lists
+      // Import custom lists (this part was already correct)
       if (data.customLists && Array.isArray(data.customLists)) {
         const listPromises = data.customLists.map(async (listData: any) => {
-          // Check if list already exists
           const existingList = customLists.find(l => l.name === listData.name)
           if (existingList) {
-            return null // Skip existing lists
+            return null
           }
           
           const response = await fetch('/api/lists', {

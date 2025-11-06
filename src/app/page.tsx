@@ -290,102 +290,134 @@ export default function Home() {
     }
   }
 
-const exportLibrary = async () => {
-  setIsExporting(true);
-  try {
-    const exportData = {
-      games: games.map(game => ({
-        steamId: game.steamId,
-        title: game.title,
-        image: game.image,
-        genres: game.genres,
-        releaseDate: game.releaseDate,
-        steamRating: game.steamRating,
-        userRating: game.userRating,
-        status: game.status,          // <-- mantiene cualquier estado
-        list: game.list,              // <-- mantiene cualquier lista personalizada
-        isFavorite: game.isFavorite,
-        developers: game.developers,
-        publishers: game.publishers,
-        price: game.price,
-        categories: game.categories,
-        platforms: game.platforms,
-        description: game.description,
-        isFree: game.isFree,
-        createdAt: game.createdAt,
-      })),
-      customLists,
-      exportDate: new Date().toISOString(),
-      version: "1.1",
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-    const exportFileDefaultName = `game-library-${new Date().toISOString().split("T")[0]}.json`;
-
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", exportFileDefaultName);
-    document.body.appendChild(linkElement);
-    linkElement.click();
-    document.body.removeChild(linkElement);
-
-    alert("✅ Library exported successfully!");
-  } catch (error) {
-    console.error("Failed to export library:", error);
-    alert("❌ Failed to export library. Please try again.");
-  } finally {
-    setIsExporting(false);
+  const exportLibrary = async () => {
+    setIsExporting(true)
+    try {
+      const exportData = {
+        games: games.map(game => ({
+          steamId: game.steamId,
+          title: game.title,
+          image: game.image,
+          genres: game.genres,
+          releaseDate: game.releaseDate,
+          steamRating: game.steamRating,
+          userRating: game.userRating,
+          status: game.status,
+          list: game.list,
+          isFavorite: game.isFavorite,
+          developers: game.developers,
+          publishers: game.publishers,
+          price: game.price,
+          categories: game.categories,
+          platforms: game.platforms,
+          description: game.description,
+          isFree: game.isFree,
+          createdAt: game.createdAt
+        })),
+        customLists: customLists,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      }
+      
+      const dataStr = JSON.stringify(exportData, null, 2)
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+      
+      const exportFileDefaultName = `game-library-${new Date().toISOString().split('T')[0]}.json`
+      
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      linkElement.style.display = 'none'
+      document.body.appendChild(linkElement)
+      linkElement.click()
+      document.body.removeChild(linkElement)
+      
+      // Show success message
+      alert('Library exported successfully!')
+    } catch (error) {
+      console.error('Failed to export library:', error)
+      alert('Failed to export library. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
   }
-}
-const exportLibrary = async () => {
-  setIsExporting(true);
-  try {
-    const exportData = {
-      games: games.map(game => ({
-        steamId: game.steamId,
-        title: game.title,
-        image: game.image,
-        genres: game.genres,
-        releaseDate: game.releaseDate,
-        steamRating: game.steamRating,
-        userRating: game.userRating,
-        status: game.status,          // conserva cualquier estado real
-        list: game.list,              // conserva listas personalizadas
-        isFavorite: game.isFavorite,
-        developers: game.developers,
-        publishers: game.publishers,
-        price: game.price,
-        categories: game.categories,
-        platforms: game.platforms,
-        description: game.description,
-        isFree: game.isFree,
-        createdAt: game.createdAt,
-      })),
-      customLists,
-      exportDate: new Date().toISOString(),
-      version: "1.2",
-    };
 
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-    const exportFileDefaultName = `game-library-${new Date().toISOString().split("T")[0]}.json`;
-
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", exportFileDefaultName);
-    document.body.appendChild(linkElement);
-    linkElement.click();
-    document.body.removeChild(linkElement);
-
-    alert("✅ Library exported successfully!");
-  } catch (error) {
-    console.error("Failed to export library:", error);
-    alert("❌ Failed to export library. Please try again.");
-  } finally {
-    setIsExporting(false);
+  const importLibrary = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    
+    setIsImporting(true)
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      
+      // Validate data structure
+      if (!data.games || !Array.isArray(data.games)) {
+        throw new Error('Invalid file format')
+      }
+      
+      // Import games
+      const importPromises = data.games.map(async (gameData: any) => {
+        // Check if game already exists
+        const existingGame = games.find(g => g.steamId === gameData.steamId)
+        if (existingGame) {
+          return null // Skip existing games
+        }
+        
+        const response = await fetch('/api/games', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(gameData)
+        })
+        
+        if (response.ok) {
+          return await response.json()
+        }
+        return null
+      })
+      
+      const importedGames = (await Promise.all(importPromises)).filter(Boolean)
+      
+      // Import custom lists
+      if (data.customLists && Array.isArray(data.customLists)) {
+        const listPromises = data.customLists.map(async (listData: any) => {
+          // Check if list already exists
+          const existingList = customLists.find(l => l.name === listData.name)
+          if (existingList) {
+            return null // Skip existing lists
+          }
+          
+          const response = await fetch('/api/lists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: listData.name,
+              color: listData.color || '#6366f1'
+            })
+          })
+          
+          if (response.ok) {
+            return await response.json()
+          }
+          return null
+        })
+        
+        const importedLists = (await Promise.all(listPromises)).filter(Boolean)
+        setCustomLists(prev => [...prev, ...importedLists])
+      }
+      
+      setGames(prev => [...prev, ...importedGames])
+      
+      alert(`Successfully imported ${importedGames.length} games!`)
+    } catch (error) {
+      console.error('Failed to import library:', error)
+      alert('Failed to import library. Please check the file format and try again.')
+    } finally {
+      setIsImporting(false)
+      // Reset file input
+      event.target.value = ''
+    }
   }
-}
 
   const handleStatusChange = async (gameId: string, newStatus: Game['status']) => {
     try {
@@ -998,130 +1030,120 @@ const exportLibrary = async () => {
         </main>
       </div>
 
-   {/* Edit Dialog */}
-<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-  <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
-    <DialogHeader className="pb-6">
-      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
-        Edit Game
-      </DialogTitle>
-    </DialogHeader>
-
-    {editingGame && (
-      <div className="space-y-6">
-        {/* 🧩 Tarjeta con imagen, título y fecha */}
-        <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-          <div className="flex items-center gap-4">
-            <img 
-              src={editingGame.image} 
-              alt={editingGame.title}
-              className="w-16 h-12 object-cover rounded-lg"
-            />
-            <div>
-              <h3 className="font-bold text-white">{editingGame.title}</h3>
-              <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 🧾 Descripción debajo de la tarjeta */}
-        {editingGame.description && (
-          <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
-            {editingGame.description}
-          </p>
-        )}
-
-        {/* Resto del formulario */}
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
-              Status
-            </label>
-            <Select 
-              value={editingGame.status} 
-              onValueChange={(value: Game['status']) => 
-                setEditingGame({...editingGame, status: value})
-              }
-            >
-              <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
-                <SelectItem value="Pending" className="hover:bg-slate-800/50">Pending</SelectItem>
-                <SelectItem value="Playing" className="hover:bg-slate-800/50">Playing</SelectItem>
-                <SelectItem value="Completed" className="hover:bg-slate-800/50">Completed</SelectItem>
-                <SelectItem value="Wishlist" className="hover:bg-slate-800/50">Wishlist</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-              Custom List
-            </label>
-            <Select 
-              value={editingGame.list} 
-              onValueChange={(value: string) => 
-                setEditingGame({...editingGame, list: value})
-              }
-            >
-              <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
-                <SelectItem value="None" className="hover:bg-slate-800/50">None</SelectItem>
-                {customLists.map(list => (
-                  <SelectItem key={list.id} value={list.name} className="hover:bg-slate-800/50">
-                    {list.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              Personal Rating
-            </label>
-            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-              <div className="flex items-center justify-between mb-3">
-                <StarRating 
-                  value={editingGame.userRating} 
-                  onChange={(value) => setEditingGame({...editingGame, userRating: value})}
-                  size="lg"
-                />
-                <span className="text-sm text-yellow-400 font-medium">
-                  {editingGame.userRating}/5 stars
-                </span>
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+              Edit Game
+            </DialogTitle>
+          </DialogHeader>
+          {editingGame && (
+            <div className="space-y-6">
+              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src={editingGame.image} 
+                    alt={editingGame.title}
+                    className="w-16 h-12 object-cover rounded-lg"
+                  />
+                  <div>
+                    <h3 className="font-bold text-white">{editingGame.title}</h3>
+                    <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-slate-500">
-                Click on the stars to rate this game
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+                    <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
+                    Status
+                  </label>
+                  <Select 
+                    value={editingGame.status} 
+                    onValueChange={(value: Game['status']) => 
+                      setEditingGame({...editingGame, status: value})
+                    }
+                  >
+                    <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
+                      <SelectItem value="Pending" className="hover:bg-slate-800/50">Pending</SelectItem>
+                      <SelectItem value="Playing" className="hover:bg-slate-800/50">Playing</SelectItem>
+                      <SelectItem value="Completed" className="hover:bg-slate-800/50">Completed</SelectItem>
+                      <SelectItem value="Wishlist" className="hover:bg-slate-800/50">Wishlist</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                    Custom List
+                  </label>
+                  <Select 
+                    value={editingGame.list} 
+                    onValueChange={(value: string) => 
+                      setEditingGame({...editingGame, list: value})
+                    }
+                  >
+                    <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
+                      <SelectItem value="None" className="hover:bg-slate-800/50">None</SelectItem>
+                      {customLists.map(list => (
+                        <SelectItem key={list.id} value={list.name} className="hover:bg-slate-800/50">
+                          {list.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                    Personal Rating
+                  </label>
+                  <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                    <div className="flex items-center justify-between mb-3">
+                      <StarRating 
+                        value={editingGame.userRating} 
+                        onChange={(value) => setEditingGame({...editingGame, userRating: value})}
+                        size="lg"
+                      />
+                      <span className="text-sm text-yellow-400 font-medium">
+                        {editingGame.userRating}/5 stars
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Click on the stars to rate this game
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={saveEditedGame}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  Save Changes
+                </button>
+                <button 
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="flex-1 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl transition-all duration-300 border border-slate-700/50"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <button 
-            onClick={saveEditedGame}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
-          >
-            Save Changes
-          </button>
-          <button 
-            onClick={() => setIsEditDialogOpen(false)}
-            className="flex-1 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl transition-all duration-300 border border-slate-700/50"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )}
-  </DialogContent>
-</Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create Custom List Dialog */}
       <Dialog open={showCreateListDialog} onOpenChange={setShowCreateListDialog}>

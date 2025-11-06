@@ -44,30 +44,30 @@ interface Game {
 }
 
 interface SteamGame {
-  steamId: string
-  title: string
-  image: string
-  genres: string[]
-  releaseDate: string
-  steamRating?: number
-  developers: string[]
-  publishers: string[]
-  price?: {
-    currency: string
-    final: number
-    initial: number
-    discountPercent: number
-    formattedFinal: string
-    formattedInitial: string
-  }
-  categories: string[]
+  steamId: string;
+  title: string;
+  image: string;
+  genres: string[];
+  releaseDate: string;
+  steamRating?: number;
+  developers: string[];
+  publishers: string[];
+  price?: { // <-- Ajustado para que coincida con price_overview
+    currency: string;
+    final: number;
+    initial: number;
+    discountPercent: number;
+    formattedFinal: string;
+    formattedInitial: string;
+  };
+  categories: string[];
   platforms: {
-    windows: boolean
-    mac: boolean
-    linux: boolean
-  }
-  description: string
-  isFree: boolean
+    windows: boolean;
+    mac: boolean;
+    linux: boolean;
+  };
+  description: string;
+  isFree: boolean;
 }
 
 interface CustomList {

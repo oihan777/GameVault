@@ -812,7 +812,7 @@ export default function Home() {
     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
   }}
 >
-  {/* --- BADGES SUPERIORES (Status y Favorito) --- */}
+  {/* --- BADGES SUPERIORES (Status y Favorito/Descuento) --- */}
   {/* Status Badge */}
   <div className="absolute top-3 left-3 z-10">
     <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
@@ -821,28 +821,18 @@ export default function Home() {
     </div>
   </div>
   
-  {/* Favorite Badge */}
-  {game.isFavorite && (
-    <div className="absolute top-3 right-3 z-10">
-      <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
-        <Heart className="w-4 h-4 text-red-400 fill-red-400" />
-      </div>
-    </div>
-  )}
-
-  {/* --- NUEVO: BADGE DE DESCUENTO PARA WISHLIST --- */}
-  {game.status === 'Wishlist' && game.price && !game.isFree && (
-    <div className="absolute bottom-3 right-3 z-10">
-      {(() => {
+  {/* --- NUEVO: BADGE SUPERIOR DERECHO (Favorito o Descuento) --- */}
+  <div className="absolute top-3 right-3 z-10">
+    {game.status === 'Wishlist' && game.price && !game.isFree ? (
+      (() => {
         const discount = game.price.discountPercent || 0;
         if (discount > 50) {
           // --- DESCUENTO ALTO (Más del 50%) ---
           return (
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative px-3 py-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg shadow-green-500/25 border border-green-400/30">
-                <span className="text-white font-bold text-lg leading-tight block">-{discount}%</span>
-                <span className="text-xs text-green-100 block leading-tight">SALE</span>
+              <div className="relative px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg shadow-green-500/25 border border-green-400/30">
+                <span className="text-white font-bold text-sm leading-tight">-{discount}%</span>
               </div>
             </div>
           );
@@ -861,9 +851,16 @@ export default function Home() {
             </div>
           );
         }
-      })()}
-    </div>
-  )}
+      })()
+    ) : (
+      // --- FAVORITO (Solo se muestra si NO es Wishlist) ---
+      game.isFavorite && (
+        <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
+          <Heart className="w-4 h-4 text-red-400 fill-red-400" />
+        </div>
+      )
+    )}
+  </div>
   
   <div className="relative">
     <div className="aspect-video overflow-hidden bg-slate-950">

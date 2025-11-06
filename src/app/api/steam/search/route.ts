@@ -1,4 +1,3 @@
-aqui esta mi codigo:
 import { NextRequest, NextResponse } from 'next/server'
 
 interface SteamGame {

@@ -1057,119 +1057,129 @@ export default function Home() {
       </div>
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
-          <DialogHeader className="pb-6">
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
-              Edit Game
-            </DialogTitle>
-          </DialogHeader>
-          {editingGame && (
-            <div className="space-y-6">
-              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src={editingGame.image} 
-                    alt={editingGame.title}
-                    className="w-16 h-12 object-cover rounded-lg"
-                  />
-                  <div>
-                    <h3 className="font-bold text-white">{editingGame.title}</h3>
-                    <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
-                  </div>
-                </div>
+<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+  <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
+    <DialogHeader className="pb-6">
+      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+        Edit Game
+      </DialogTitle>
+    </DialogHeader>
+
+    {editingGame && (
+      <div className="space-y-6">
+        {/* 🧩 Tarjeta con imagen, título y fecha */}
+        <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+          <div className="flex items-center gap-4">
+            <img 
+              src={editingGame.image} 
+              alt={editingGame.title}
+              className="w-16 h-12 object-cover rounded-lg"
+            />
+            <div>
+              <h3 className="font-bold text-white">{editingGame.title}</h3>
+              <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 🧾 Descripción debajo de la tarjeta */}
+        {editingGame.description && (
+          <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
+            {editingGame.description}
+          </p>
+        )}
+
+        {/* Resto del formulario */}
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+              <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
+              Status
+            </label>
+            <Select 
+              value={editingGame.status} 
+              onValueChange={(value: Game['status']) => 
+                setEditingGame({...editingGame, status: value})
+              }
+            >
+              <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
+                <SelectItem value="Pending" className="hover:bg-slate-800/50">Pending</SelectItem>
+                <SelectItem value="Playing" className="hover:bg-slate-800/50">Playing</SelectItem>
+                <SelectItem value="Completed" className="hover:bg-slate-800/50">Completed</SelectItem>
+                <SelectItem value="Wishlist" className="hover:bg-slate-800/50">Wishlist</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+              Custom List
+            </label>
+            <Select 
+              value={editingGame.list} 
+              onValueChange={(value: string) => 
+                setEditingGame({...editingGame, list: value})
+              }
+            >
+              <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
+                <SelectItem value="None" className="hover:bg-slate-800/50">None</SelectItem>
+                {customLists.map(list => (
+                  <SelectItem key={list.id} value={list.name} className="hover:bg-slate-800/50">
+                    {list.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              Personal Rating
+            </label>
+            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+              <div className="flex items-center justify-between mb-3">
+                <StarRating 
+                  value={editingGame.userRating} 
+                  onChange={(value) => setEditingGame({...editingGame, userRating: value})}
+                  size="lg"
+                />
+                <span className="text-sm text-yellow-400 font-medium">
+                  {editingGame.userRating}/5 stars
+                </span>
               </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-                    <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
-                    Status
-                  </label>
-                  <Select 
-                    value={editingGame.status} 
-                    onValueChange={(value: Game['status']) => 
-                      setEditingGame({...editingGame, status: value})
-                    }
-                  >
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
-                      <SelectItem value="Pending" className="hover:bg-slate-800/50">Pending</SelectItem>
-                      <SelectItem value="Playing" className="hover:bg-slate-800/50">Playing</SelectItem>
-                      <SelectItem value="Completed" className="hover:bg-slate-800/50">Completed</SelectItem>
-                      <SelectItem value="Wishlist" className="hover:bg-slate-800/50">Wishlist</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                    Custom List
-                  </label>
-                  <Select 
-                    value={editingGame.list} 
-                    onValueChange={(value: string) => 
-                      setEditingGame({...editingGame, list: value})
-                    }
-                  >
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
-                      <SelectItem value="None" className="hover:bg-slate-800/50">None</SelectItem>
-                      {customLists.map(list => (
-                        <SelectItem key={list.id} value={list.name} className="hover:bg-slate-800/50">
-                          {list.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                    Personal Rating
-                  </label>
-                  <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                    <div className="flex items-center justify-between mb-3">
-                      <StarRating 
-                        value={editingGame.userRating} 
-                        onChange={(value) => setEditingGame({...editingGame, userRating: value})}
-                        size="lg"
-                      />
-                      <span className="text-sm text-yellow-400 font-medium">
-                        {editingGame.userRating}/5 stars
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      Click on the stars to rate this game
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex gap-3 pt-4">
-                <button 
-                  onClick={saveEditedGame}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
-                >
-                  Save Changes
-                </button>
-                <button 
-                  onClick={() => setIsEditDialogOpen(false)}
-                  className="flex-1 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl transition-all duration-300 border border-slate-700/50"
-                >
-                  Cancel
-                </button>
+              <div className="text-xs text-slate-500">
+                Click on the stars to rate this game
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <button 
+            onClick={saveEditedGame}
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
+          >
+            Save Changes
+          </button>
+          <button 
+            onClick={() => setIsEditDialogOpen(false)}
+            className="flex-1 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl transition-all duration-300 border border-slate-700/50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
 
       {/* Create Custom List Dialog */}
       <Dialog open={showCreateListDialog} onOpenChange={setShowCreateListDialog}>

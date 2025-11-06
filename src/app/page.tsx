@@ -1030,7 +1030,7 @@ export default function Home() {
         </main>
       </div>
 
-     {/* Edit Dialog */}
+   {/* Edit Dialog */}
 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
   <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
     <DialogHeader className="pb-6">
@@ -1041,7 +1041,7 @@ export default function Home() {
 
     {editingGame && (
       <div className="space-y-6">
-        {/* 🧩 Tarjeta de información del juego */}
+        {/* 🧩 Tarjeta con imagen, título y fecha */}
         <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
           <div className="flex items-center gap-4">
             <img 
@@ -1049,22 +1049,21 @@ export default function Home() {
               alt={editingGame.title}
               className="w-16 h-12 object-cover rounded-lg"
             />
-            <div className="flex flex-col">
+            <div>
               <h3 className="font-bold text-white">{editingGame.title}</h3>
-
-              {/* 🔽 Descripción del juego */}
-              {editingGame.description && (
-                <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 mt-1 mb-1">
-                  {editingGame.description}
-                </p>
-              )}
-
               <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
             </div>
           </div>
         </div>
 
-        {/* 🧩 Campos de edición */}
+        {/* 🧾 Descripción debajo de la tarjeta */}
+        {editingGame.description && (
+          <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
+            {editingGame.description}
+          </p>
+        )}
+
+        {/* Resto del formulario */}
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
@@ -1137,7 +1136,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 🧩 Botones de acción */}
         <div className="flex gap-3 pt-4">
           <button 
             onClick={saveEditedGame}
@@ -1156,6 +1154,7 @@ export default function Home() {
     )}
   </DialogContent>
 </Dialog>
+
       {/* Create Custom List Dialog */}
       <Dialog open={showCreateListDialog} onOpenChange={setShowCreateListDialog}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">

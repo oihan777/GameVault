@@ -14,7 +14,7 @@ interface SteamAppDetails {
       header_image: string;
       short_description: string;
       release_date?: { date?: string };
-      metacritic?: { score?: number };
+      metacritic?: { score?: number; url: string };
       developers?: Array<{ name: string }>;
       publishers?: Array<{ name: string }>;
       price_overview?: {
@@ -40,15 +40,13 @@ interface SteamAppDetails {
 // --- Función principal de búsqueda (Robusta y eficiente) ---
 async function searchSteamStore(query: string): Promise<any[]> {
   const searchUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(query)}&l=spanish&cc=ES&category1=9980&supportedlang=spanish&exclude_content_descriptors=1&f=games&os=win&page=1&ndl=1`;
-  
   const response = await fetch(searchUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     },
   });
 
   if (!response.ok) {
-    // Si la búsqueda falla, lanzamos un error específico
     throw new Error(`Steam search API request failed with status: ${response.status}`);
   }
 
@@ -61,10 +59,9 @@ async function getAppDetails(appIds: number[]): Promise<SteamAppDetails> {
   if (appIds.length === 0) return {};
 
   const detailsUrl = `https://store.steampowered.com/api/appdetails?appids=${appIds.join(',')}&filters=price_overview%2Cbasic%2Ccategories&l=spanish&cc=ES`;
-  
   const response = await fetch(detailsUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     },
   });
 
@@ -98,7 +95,7 @@ export async function GET(request: NextRequest) {
     // 3. Obtener los detalles de todos los juegos de una sola vez (¡Mucho más eficiente!)
     const detailsData = await getAppDetails(gameIds);
 
-    // 4. Formatear los resultados para el frontend
+    // 4. Formatear la respuesta final
     const formattedGames = searchResults.map((result: SteamSearchResult) => {
       const details = detailsData[result.id];
       if (!details?.success || details.data.type !== 'game') {
@@ -124,20 +121,19 @@ export async function GET(request: NextRequest) {
       };
     }).filter(Boolean);
 
-    return NextResponse.json({ 
-      games: formattedGames, 
+    return NextResponse.json({
+      games: formattedGames,
       total: formattedGames.length,
-      query: query 
+      query: query,
     });
 
-  } catch (error: {
+  } catch (error) {
     console.error('Steam API error:', error);
-    // Devolvemos un error más específico para ayudar en la depuración
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch games from Steam API', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      }, 
+      {
+        error: 'Failed to fetch games from Steam API',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

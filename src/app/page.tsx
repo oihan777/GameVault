@@ -290,134 +290,102 @@ export default function Home() {
     }
   }
 
-  const exportLibrary = async () => {
-    setIsExporting(true)
-    try {
-      const exportData = {
-        games: games.map(game => ({
-          steamId: game.steamId,
-          title: game.title,
-          image: game.image,
-          genres: game.genres,
-          releaseDate: game.releaseDate,
-          steamRating: game.steamRating,
-          userRating: game.userRating,
-          status: game.status,
-          list: game.list,
-          isFavorite: game.isFavorite,
-          developers: game.developers,
-          publishers: game.publishers,
-          price: game.price,
-          categories: game.categories,
-          platforms: game.platforms,
-          description: game.description,
-          isFree: game.isFree,
-          createdAt: game.createdAt
-        })),
-        customLists: customLists,
-        exportDate: new Date().toISOString(),
-        version: '1.0'
-      }
-      
-      const dataStr = JSON.stringify(exportData, null, 2)
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-      
-      const exportFileDefaultName = `game-library-${new Date().toISOString().split('T')[0]}.json`
-      
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', exportFileDefaultName)
-      linkElement.style.display = 'none'
-      document.body.appendChild(linkElement)
-      linkElement.click()
-      document.body.removeChild(linkElement)
-      
-      // Show success message
-      alert('Library exported successfully!')
-    } catch (error) {
-      console.error('Failed to export library:', error)
-      alert('Failed to export library. Please try again.')
-    } finally {
-      setIsExporting(false)
-    }
-  }
+const exportLibrary = async () => {
+  setIsExporting(true);
+  try {
+    const exportData = {
+      games: games.map(game => ({
+        steamId: game.steamId,
+        title: game.title,
+        image: game.image,
+        genres: game.genres,
+        releaseDate: game.releaseDate,
+        steamRating: game.steamRating,
+        userRating: game.userRating,
+        status: game.status,          // <-- mantiene cualquier estado
+        list: game.list,              // <-- mantiene cualquier lista personalizada
+        isFavorite: game.isFavorite,
+        developers: game.developers,
+        publishers: game.publishers,
+        price: game.price,
+        categories: game.categories,
+        platforms: game.platforms,
+        description: game.description,
+        isFree: game.isFree,
+        createdAt: game.createdAt,
+      })),
+      customLists,
+      exportDate: new Date().toISOString(),
+      version: "1.1",
+    };
 
-  const importLibrary = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    
-    setIsImporting(true)
-    try {
-      const text = await file.text()
-      const data = JSON.parse(text)
-      
-      // Validate data structure
-      if (!data.games || !Array.isArray(data.games)) {
-        throw new Error('Invalid file format')
-      }
-      
-      // Import games
-      const importPromises = data.games.map(async (gameData: any) => {
-        // Check if game already exists
-        const existingGame = games.find(g => g.steamId === gameData.steamId)
-        if (existingGame) {
-          return null // Skip existing games
-        }
-        
-        const response = await fetch('/api/games', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(gameData)
-        })
-        
-        if (response.ok) {
-          return await response.json()
-        }
-        return null
-      })
-      
-      const importedGames = (await Promise.all(importPromises)).filter(Boolean)
-      
-      // Import custom lists
-      if (data.customLists && Array.isArray(data.customLists)) {
-        const listPromises = data.customLists.map(async (listData: any) => {
-          // Check if list already exists
-          const existingList = customLists.find(l => l.name === listData.name)
-          if (existingList) {
-            return null // Skip existing lists
-          }
-          
-          const response = await fetch('/api/lists', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: listData.name,
-              color: listData.color || '#6366f1'
-            })
-          })
-          
-          if (response.ok) {
-            return await response.json()
-          }
-          return null
-        })
-        
-        const importedLists = (await Promise.all(listPromises)).filter(Boolean)
-        setCustomLists(prev => [...prev, ...importedLists])
-      }
-      
-      setGames(prev => [...prev, ...importedGames])
-      
-      alert(`Successfully imported ${importedGames.length} games!`)
-    } catch (error) {
-      console.error('Failed to import library:', error)
-      alert('Failed to import library. Please check the file format and try again.')
-    } finally {
-      setIsImporting(false)
-      // Reset file input
-      event.target.value = ''
-    }
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `game-library-${new Date().toISOString().split("T")[0]}.json`;
+
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    document.body.appendChild(linkElement);
+    linkElement.click();
+    document.body.removeChild(linkElement);
+
+    alert("✅ Library exported successfully!");
+  } catch (error) {
+    console.error("Failed to export library:", error);
+    alert("❌ Failed to export library. Please try again.");
+  } finally {
+    setIsExporting(false);
   }
+}
+const exportLibrary = async () => {
+  setIsExporting(true);
+  try {
+    const exportData = {
+      games: games.map(game => ({
+        steamId: game.steamId,
+        title: game.title,
+        image: game.image,
+        genres: game.genres,
+        releaseDate: game.releaseDate,
+        steamRating: game.steamRating,
+        userRating: game.userRating,
+        status: game.status,          // conserva cualquier estado real
+        list: game.list,              // conserva listas personalizadas
+        isFavorite: game.isFavorite,
+        developers: game.developers,
+        publishers: game.publishers,
+        price: game.price,
+        categories: game.categories,
+        platforms: game.platforms,
+        description: game.description,
+        isFree: game.isFree,
+        createdAt: game.createdAt,
+      })),
+      customLists,
+      exportDate: new Date().toISOString(),
+      version: "1.2",
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `game-library-${new Date().toISOString().split("T")[0]}.json`;
+
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    document.body.appendChild(linkElement);
+    linkElement.click();
+    document.body.removeChild(linkElement);
+
+    alert("✅ Library exported successfully!");
+  } catch (error) {
+    console.error("Failed to export library:", error);
+    alert("❌ Failed to export library. Please try again.");
+  } finally {
+    setIsExporting(false);
+  }
+}
 
   const handleStatusChange = async (gameId: string, newStatus: Game['status']) => {
     try {

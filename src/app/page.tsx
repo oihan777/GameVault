@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock, MessageSquare } from 'lucide-react'
+import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock } from 'lucide-react' // Icono MessageSquare eliminado
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,7 +41,7 @@ interface Game {
   }
   description: string
   isFree: boolean
-  personalNote?: string // El campo ya existía, no lo he tocado.
+  // Campo 'personalNote' eliminado
 }
 
 interface SteamGame {
@@ -306,7 +306,7 @@ export default function Home() {
           platforms: game.platforms,
           description: game.description,
           isFree: game.isFree,
-          personalNote: game.personalNote,
+          // personalNote eliminado de aquí
           createdAt: game.createdAt
         })),
         customLists: customLists,
@@ -377,7 +377,7 @@ export default function Home() {
             userRating: gameData.userRating || 0,
             list: gameData.list || 'None',
             isFavorite: gameData.isFavorite || false,
-            personalNote: gameData.personalNote || ''
+            // personalNote eliminado de aquí
           })
         })
 
@@ -516,7 +516,7 @@ export default function Home() {
           status: editingGame.status,
           userRating: editingGame.userRating,
           list: editingGame.list,
-          personalNote: editingGame.personalNote
+          // personalNote eliminado de aquí
         })
       })
       
@@ -791,7 +791,6 @@ export default function Home() {
     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
   }}
 >
-  {/* --- BADGES SUPERIORES --- */}
   {/* Status Badge */}
   <div className="absolute top-3 left-3 z-10">
     <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
@@ -800,57 +799,56 @@ export default function Home() {
     </div>
   </div>
   
-  {/* --- INICIO DEL CAMBIO: NOTA PERSONAL EN LA ESQUINA SUPERIOR DERECHA --- */}
-  {game.personalNote && (
-    <div className="absolute top-3 right-3 z-10 max-w-[60%]">
-      <div className="bg-slate-800/90 backdrop-blur-sm rounded-lg border border-slate-700/50 p-2 shadow-lg group-hover:shadow-xl transition-all duration-300">
-        <div className="flex items-start gap-1">
-          <MessageSquare className="w-3 h-3 text-violet-400 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-slate-300 line-clamp-2 leading-tight">
-            {game.personalNote}
-          </p>
-        </div>
+  {/* --- INICIO DEL CAMBIO: VALORACIÓN POR ESTRELLAS EN LA ESQUINA SUPERIOR DERECHA --- */}
+  <div className="absolute top-3 right-3 z-10">
+    {game.userRating > 0 ? (
+      <div className="bg-slate-800/90 backdrop-blur-sm rounded-lg border border-yellow-400/30 p-2 shadow-lg group-hover:shadow-xl transition-all duration-300">
+        <StarRating 
+          value={game.userRating} 
+          onChange={(value) => handleRatingChange(game.id, value)}
+          size="sm"
+        />
       </div>
-    </div>
-  )}
-  {/* --- FIN DEL CAMBIO --- */}
-  
-  {/* --- Badge de Favorito o Descuento (ligeramente desplazado hacia abajo para no solaparse) --- */}
-  <div className="absolute top-14 right-3 z-10">
-    {game.status === 'Wishlist' && game.price && !game.isFree ? (
-      (() => {
-        const discount = game.price.discountPercent || 0;
-        if (discount > 50) {
-          return (
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg shadow-green-500/25 border border-green-400/30">
-                <span className="text-white font-bold text-sm leading-tight">-{discount}%</span>
-              </div>
-            </div>
-          );
-        } else if (discount > 0) {
-          return (
-            <div className="px-2 py-1 bg-slate-700/80 backdrop-blur-sm rounded-lg border border-slate-600/50">
-              <span className="text-xs text-slate-300 font-medium">-{discount}%</span>
-            </div>
-          );
-        } else {
-          return (
-            <div className="px-2 py-1 bg-slate-800/60 backdrop-blur-sm rounded-lg border border-slate-700/50">
-              <span className="text-xs text-slate-400">Full Price</span>
-            </div>
-          );
-        }
-      })()
     ) : (
-      game.isFavorite && (
-        <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
-          <Heart className="w-4 h-4 text-red-400 fill-red-400" />
-        </div>
-      )
+      // Mostrar badge de favorito o descuento si no hay valoración
+      <>
+        {game.status === 'Wishlist' && game.price && !game.isFree ? (
+          (() => {
+            const discount = game.price.discountPercent || 0;
+            if (discount > 50) {
+              return (
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="relative px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg shadow-green-500/25 border border-green-400/30">
+                    <span className="text-white font-bold text-sm leading-tight">-{discount}%</span>
+                  </div>
+                </div>
+              );
+            } else if (discount > 0) {
+              return (
+                <div className="px-2 py-1 bg-slate-700/80 backdrop-blur-sm rounded-lg border border-slate-600/50">
+                  <span className="text-xs text-slate-300 font-medium">-{discount}%</span>
+                </div>
+              );
+            } else {
+              return (
+                <div className="px-2 py-1 bg-slate-800/60 backdrop-blur-sm rounded-lg border border-slate-700/50">
+                  <span className="text-xs text-slate-400">Full Price</span>
+                </div>
+              );
+            }
+          })()
+        ) : (
+          game.isFavorite && (
+            <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
+              <Heart className="w-4 h-4 text-red-400 fill-red-400" />
+            </div>
+          )
+        )}
+      </>
     )}
   </div>
+  {/* --- FIN DEL CAMBIO --- */}
   
   <div className="relative">
     <div className="aspect-video overflow-hidden bg-slate-950">
@@ -905,21 +903,7 @@ export default function Home() {
       {game.isFree && <span className="text-green-400 font-medium">Free</span>}
     </div>
     
-    {game.userRating > 0 && (
-      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 rounded-lg border border-yellow-400/20 mb-4">
-        <div className="flex items-center gap-2">
-          <StarRating 
-            value={game.userRating} 
-            onChange={(value) => handleRatingChange(game.id, value)}
-            size="sm"
-            className="scale-90"
-          />
-        </div>
-        <span className="text-xs text-yellow-400 font-medium">
-          {game.userRating}/5
-        </span>
-      </div>
-    )}
+    {/* La valoración por estrellas se ha movido arriba y ya no se muestra aquí */}
     
     <div className="flex gap-2">
       <button
@@ -1178,21 +1162,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-violet-400" />
-              Personal Note
-            </label>
-            <textarea
-              value={editingGame.personalNote || ''}
-              onChange={(e) => setEditingGame({...editingGame, personalNote: e.target.value})}
-              placeholder="Add a personal note about this game..."
-              className="w-full bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 rounded-xl text-white placeholder-slate-500 p-3 h-24 resize-none"
-            />
-            <div className="text-xs text-slate-500 mt-1">
-              This note will be displayed on the game card
-            </div>
-          </div>
+          {/* Campo de nota personal eliminado */}
         </div>
 
         <div className="flex gap-3 pt-4">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock } from 'lucide-react'
+import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,6 +41,7 @@ interface Game {
   }
   description: string
   isFree: boolean
+  personalNote?: string // El campo ya existía, no lo he tocado.
 }
 
 interface SteamGame {
@@ -52,7 +53,7 @@ interface SteamGame {
   steamRating?: number;
   developers: string[];
   publishers: string[];
-  price?: { // <-- Ajustado para que coincida con price_overview
+  price?: {
     currency: string;
     final: number;
     initial: number;
@@ -112,16 +113,14 @@ export default function Home() {
   const [showCreateListDialog, setShowCreateListDialog] = useState(false)
   const [newListName, setNewListName] = useState('')
   const [newListColor, setNewListColor] = useState('#6366f1')
-  const [searchMode, setSearchMode] = useState(false) // New state for search mode
+  const [searchMode, setSearchMode] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
 
-  // Add click outside handler for search results
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       if (!target.closest('.search-container')) {
-        // Only hide dropdown, keep search results in All Games
         setShowSearchResults(false)
       }
     }
@@ -130,7 +129,6 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Reset search mode when filter changes
   useEffect(() => {
     if (selectedFilter !== 'all') {
       setSearchMode(false)
@@ -138,7 +136,6 @@ export default function Home() {
     }
   }, [selectedFilter])
 
-  // Load games from database on mount
   useEffect(() => {
     loadGames()
     loadCustomLists()
@@ -168,7 +165,6 @@ export default function Home() {
     }
   }
 
-  // Update sidebar counts when games change
   const sidebarItems = [
     { id: 'all', label: 'All Games', icon: Library, count: games.length },
     { id: 'pending', label: 'Pending', icon: Clock, count: games.filter(g => g.status === 'Pending').length },
@@ -186,7 +182,6 @@ export default function Home() {
     } else if (['pending', 'playing', 'completed', 'wishlist'].includes(selectedFilter)) {
       matchesFilter = game.status.toLowerCase() === selectedFilter
     } else {
-      // Custom list filter
       const customList = customLists.find(list => list.id === selectedFilter)
       matchesFilter = customList ? game.list === customList.name : false
     }
@@ -257,7 +252,6 @@ export default function Home() {
       if (response.ok) {
         const newGame = await response.json()
         setGames(prev => [newGame, ...prev])
-        // Remove from search results after adding
         setSteamSearchResults(prev => prev.filter(game => game.steamId !== steamGame.steamId))
       }
     } catch (error) {
@@ -312,6 +306,7 @@ export default function Home() {
           platforms: game.platforms,
           description: game.description,
           isFree: game.isFree,
+          personalNote: game.personalNote,
           createdAt: game.createdAt
         })),
         customLists: customLists,
@@ -332,7 +327,6 @@ export default function Home() {
       linkElement.click()
       document.body.removeChild(linkElement)
       
-      // Show success message
       alert('Library exported successfully!')
     } catch (error) {
       console.error('Failed to export library:', error)
@@ -351,25 +345,20 @@ export default function Home() {
       const text = await file.text()
       const data = JSON.parse(text)
       
-      // Validate data structure
       if (!data.games || !Array.isArray(data.games)) {
         throw new Error('Invalid file format')
       }
       
-      // Import games using the two-step process: Create, then Update.
       const importPromises = data.games.map(async (gameData: any) => {
-        // Check if game already exists in the current library
         const existingGame = games.find(g => g.steamId === gameData.steamId)
         if (existingGame) {
           console.log(`Skipping already imported game: ${gameData.title}`)
-          return null // Skip existing games
+          return null
         }
         
-        // --- PASO 1: Crear el juego en la base de datos ---
         const createResponse = await fetch('/api/games', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // Enviamos los datos del juego. El API usará los datos básicos para crearlo.
           body: JSON.stringify(gameData)
         })
         
@@ -380,24 +369,21 @@ export default function Home() {
         
         const newGame = await createResponse.json()
         
-        // --- PASO 2: Actualizar el juego con los campos personalizados ---
         const updateResponse = await fetch(`/api/games/${newGame.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            status: gameData.status || 'Pending', // Usamos el valor del JSON o un defecto
+            status: gameData.status || 'Pending',
             userRating: gameData.userRating || 0,
             list: gameData.list || 'None',
-            isFavorite: gameData.isFavorite || false
+            isFavorite: gameData.isFavorite || false,
+            personalNote: gameData.personalNote || ''
           })
         })
 
         if (updateResponse.ok) {
-          // Devolvemos el juego completamente actualizado
           return await updateResponse.json()
         } else {
-          // Si la actualización falla, devolvemos el juego recién creado (sin datos personalizados)
-          // para que al menos se añada a la biblioteca.
           console.warn(`Game created but failed to update custom data for: ${gameData.title}`)
           return newGame
         }
@@ -405,7 +391,6 @@ export default function Home() {
       
       const importedGames = (await Promise.all(importPromises)).filter(Boolean)
       
-      // Import custom lists (this part was already correct)
       if (data.customLists && Array.isArray(data.customLists)) {
         const listPromises = data.customLists.map(async (listData: any) => {
           const existingList = customLists.find(l => l.name === listData.name)
@@ -440,7 +425,6 @@ export default function Home() {
       alert('Failed to import library. Please check the file format and try again.')
     } finally {
       setIsImporting(false)
-      // Reset file input
       event.target.value = ''
     }
   }
@@ -531,7 +515,8 @@ export default function Home() {
         body: JSON.stringify({ 
           status: editingGame.status,
           userRating: editingGame.userRating,
-          list: editingGame.list
+          list: editingGame.list,
+          personalNote: editingGame.personalNote
         })
       })
       
@@ -638,7 +623,6 @@ export default function Home() {
             <span className="font-medium">Create New List</span>
           </button>
           
-          {/* Export/Import Section */}
           <div className="mt-6 pt-6 border-t border-slate-800/50">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-slate-400">Library Management</h3>
@@ -690,9 +674,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Navigation */}
         <header className="bg-slate-900/30 backdrop-blur-xl border-b border-slate-800/50 p-6">
           <div className="max-w-4xl mx-auto relative search-container">
             <div className="relative group">
@@ -723,7 +705,6 @@ export default function Home() {
               )}
             </div>
             
-            {/* Steam Search Results Dropdown - Only show for other filters */}
             {showSearchResults && steamSearchResults.length > 0 && selectedFilter !== 'all' && (
               <div className="absolute top-full left-0 right-0 mt-3 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 max-h-96 overflow-y-auto z-50">
                 <div className="p-3">
@@ -761,7 +742,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Game Grid */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -794,7 +774,6 @@ export default function Home() {
               </div>
             </div>
             
-            {/* Show library games */}
             {filteredGames.length > 0 && (
               <div className="mb-8">
                 {selectedFilter === 'all' && searchMode && (
@@ -812,7 +791,7 @@ export default function Home() {
     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
   }}
 >
-  {/* --- BADGES SUPERIORES (Status y Favorito/Descuento) --- */}
+  {/* --- BADGES SUPERIORES --- */}
   {/* Status Badge */}
   <div className="absolute top-3 left-3 z-10">
     <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
@@ -821,13 +800,27 @@ export default function Home() {
     </div>
   </div>
   
-  {/* --- NUEVO: BADGE SUPERIOR DERECHO (Favorito o Descuento) --- */}
-  <div className="absolute top-3 right-3 z-10">
+  {/* --- INICIO DEL CAMBIO: NOTA PERSONAL EN LA ESQUINA SUPERIOR DERECHA --- */}
+  {game.personalNote && (
+    <div className="absolute top-3 right-3 z-10 max-w-[60%]">
+      <div className="bg-slate-800/90 backdrop-blur-sm rounded-lg border border-slate-700/50 p-2 shadow-lg group-hover:shadow-xl transition-all duration-300">
+        <div className="flex items-start gap-1">
+          <MessageSquare className="w-3 h-3 text-violet-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-slate-300 line-clamp-2 leading-tight">
+            {game.personalNote}
+          </p>
+        </div>
+      </div>
+    </div>
+  )}
+  {/* --- FIN DEL CAMBIO --- */}
+  
+  {/* --- Badge de Favorito o Descuento (ligeramente desplazado hacia abajo para no solaparse) --- */}
+  <div className="absolute top-14 right-3 z-10">
     {game.status === 'Wishlist' && game.price && !game.isFree ? (
       (() => {
         const discount = game.price.discountPercent || 0;
         if (discount > 50) {
-          // --- DESCUENTO ALTO (Más del 50%) ---
           return (
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
@@ -837,14 +830,12 @@ export default function Home() {
             </div>
           );
         } else if (discount > 0) {
-          // --- DESCUENTO BAJO (Entre 1% y 50%) ---
           return (
             <div className="px-2 py-1 bg-slate-700/80 backdrop-blur-sm rounded-lg border border-slate-600/50">
               <span className="text-xs text-slate-300 font-medium">-{discount}%</span>
             </div>
           );
         } else {
-          // --- SIN DESCUENTO (0%) ---
           return (
             <div className="px-2 py-1 bg-slate-800/60 backdrop-blur-sm rounded-lg border border-slate-700/50">
               <span className="text-xs text-slate-400">Full Price</span>
@@ -853,7 +844,6 @@ export default function Home() {
         }
       })()
     ) : (
-      // --- FAVORITO (Solo se muestra si NO es Wishlist) ---
       game.isFavorite && (
         <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
           <Heart className="w-4 h-4 text-red-400 fill-red-400" />
@@ -962,7 +952,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Show Steam search results in All Games section */}
             {selectedFilter === 'all' && searchMode && steamSearchResults.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-6">
@@ -1064,7 +1053,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Empty state */}
             {filteredGames.length === 0 && (!searchMode || steamSearchResults.length === 0) && (
               <div className="text-center py-16">
                 <div className="relative inline-block mb-6">
@@ -1099,7 +1087,6 @@ export default function Home() {
 
     {editingGame && (
       <div className="space-y-6">
-        {/* 🧩 Tarjeta con imagen, título y fecha */}
         <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
           <div className="flex items-center gap-4">
             <img 
@@ -1114,14 +1101,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 🧾 Descripción debajo de la tarjeta */}
         {editingGame.description && (
           <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
             {editingGame.description}
           </p>
         )}
 
-        {/* Resto del formulario */}
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
@@ -1190,6 +1175,22 @@ export default function Home() {
               <div className="text-xs text-slate-500">
                 Click on the stars to rate this game
               </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-violet-400" />
+              Personal Note
+            </label>
+            <textarea
+              value={editingGame.personalNote || ''}
+              onChange={(e) => setEditingGame({...editingGame, personalNote: e.target.value})}
+              placeholder="Add a personal note about this game..."
+              className="w-full bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 rounded-xl text-white placeholder-slate-500 p-3 h-24 resize-none"
+            />
+            <div className="text-xs text-slate-500 mt-1">
+              This note will be displayed on the game card
             </div>
           </div>
         </div>
@@ -1270,7 +1271,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Add CSS animations */}
       <style jsx>{`
         @keyframes fadeInUp {
           from {

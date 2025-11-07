@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react' // Importé useMemo
+import { useState, useEffect, useMemo } from 'react'
 import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StarRating } from '@/components/ui/star-rating'
 import { SortControls } from '@/components/ui/sort-controls'
-import { Checkbox } from '@/components/ui/checkbox' // Importé Checkbox
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface Game {
   id: string
@@ -53,7 +53,7 @@ interface SteamGame {
   steamRating?: number;
   developers: string[];
   publishers: string[];
-  price?: { // <-- Ajustado para que coincida con price_overview
+  price?: {
     currency: string;
     final: number;
     initial: number;
@@ -117,11 +117,9 @@ export default function Home() {
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   
-  // --- NUEVOS ESTADOS PARA LOS FILTROS DE GÉNERO ---
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
 
-  // --- OBTENER TODOS LOS GÉNEROS ÚNICOS ---
   const allGenres = useMemo(() => {
     const genres = new Set<string>()
     games.forEach(game => game.genres.forEach(genre => genres.add(genre)))
@@ -184,7 +182,6 @@ export default function Home() {
     { id: 'wishlist', label: 'Wishlist', icon: Star, count: games.filter(g => g.status === 'Wishlist').length }
   ]
 
-  // --- ACTUALICÉ LA LÓGICA DE FILTRADO PARA INCLUIR GÉNEROS ---
   const filteredGames = games.filter(game => {
     const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase())
     
@@ -543,7 +540,6 @@ export default function Home() {
     }
   }
 
-  // --- FUNCIÓN PARA MANEJAR EL CAMBIO DE GÉNEROS ---
   const handleGenreChange = (genre: string, checked: boolean) => {
     setSelectedGenres(prev => 
       checked 
@@ -781,14 +777,12 @@ export default function Home() {
               </div>
               
               <div className="flex items-center gap-3">
-                {/* --- CAMBIO 1: ARREGLAR COLOR DEL TEXTO EN SORTCONTROLS --- */}
                 <SortControls 
                   value={sortBy} 
                   onChange={setSortBy}
-                  className="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 text-white" // Añadí text-white
+                  className="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 text-white"
                 />
                 
-                {/* --- CAMBIO 2: BOTÓN DE FILTRO FUNCIONAL --- */}
                 <Button
                   variant="outline"
                   onClick={() => setIsFilterDialogOpen(true)}
@@ -849,7 +843,8 @@ export default function Home() {
     </div>
   )}
   
-  <div className="absolute top-14 right-3 z-10">
+  {/* --- INICIO DEL CAMBIO: POSICIÓN DINÁMICA DEL BADGE DE FAVORITO/DESCUENTO --- */}
+  <div className={`absolute ${game.userRating > 0 ? 'top-14' : 'top-3'} right-3 z-10`}>
     {game.status === 'Wishlist' && game.price && !game.isFree ? (
       (() => {
         const discount = game.price.discountPercent || 0;
@@ -884,6 +879,7 @@ export default function Home() {
       )
     )}
   </div>
+  {/* --- FIN DEL CAMBIO --- */}
   
   <div className="relative">
     <div className="aspect-video overflow-hidden bg-slate-950">
@@ -1219,7 +1215,6 @@ export default function Home() {
   </DialogContent>
 </Dialog>
 
-      {/* --- NUEVO DIÁLOGO DE FILTROS POR GÉNERO --- */}
       <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader className="pb-6">
@@ -1265,7 +1260,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Create Custom List Dialog */}
       <Dialog open={showCreateListDialog} onOpenChange={setShowCreateListDialog}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
           <DialogHeader className="pb-6">

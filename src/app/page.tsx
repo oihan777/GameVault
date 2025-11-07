@@ -583,7 +583,8 @@ export default function Home() {
   }
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex zoom-[70%]">      {/* Sidebar */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex zoom-[70%]">
+      {/* Sidebar */}
       <div className="w-72 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800/50 p-6">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/25">
@@ -724,7 +725,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
+        {/* Top Navigation */}
         <header className="bg-slate-900/30 backdrop-blur-xl border-b border-slate-800/50 p-6">
           <div className="max-w-4xl mx-auto relative search-container">
             <div className="relative group">
@@ -792,6 +795,7 @@ export default function Home() {
           </div>
         </header>
 
+        {/* Game Grid */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -847,151 +851,147 @@ export default function Home() {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredGames.map((game, index) => (
-                    {filteredGames.map((game, index) => (
-  <Card 
-    key={game.id} 
-    className="group bg-slate-900/50 backdrop-blur-sm border-slate-800/50 overflow-hidden hover:shadow-2xl hover:shadow-violet-500/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 relative rounded-t-lg" // Añadí rounded-t-lg y overflow-hidden aquí
-    style={{
-      animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
-    }}
-  >
-    {/* --- BADGES SUPERIORES --- */}
-    {/* Status Badge */}
-    <div className="absolute top-3 left-3 z-10">
-      <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
-        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        {game.status}
-      </div>
-    </div>
-    
-    {/* --- INICIO DEL CAMBIO: PUNTUACIÓN EN CAJA CON ICONO Y NÚMERO --- */}
-    {game.userRating > 0 && (
-      <div className="absolute top-3 right-3 z-10 bg-slate-900/80 backdrop-blur-sm rounded-lg border border-slate-700/50 p-2 shadow-lg flex items-center gap-1.5">
-        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-        <span className="text-xs text-yellow-400 font-medium leading-none">
-          {game.userRating}
-        </span>
-      </div>
-    )}
-    {/* --- FIN DEL CAMBIO --- */}
-    
-    {/* --- Badge de Favorito o Descuento (posición dinámica) --- */}
-    <div className={`absolute ${game.userRating > 0 ? 'top-14' : 'top-3'} right-3 z-10`}>
-      {game.status === 'Wishlist' && game.price && !game.isFree ? (
-        (() => {
-          const discount = game.price.discountPercent || 0;
-          if (discount > 50) {
-            return (
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg shadow-green-500/25 border border-green-400/30">
-                  <span className="text-white font-bold text-sm leading-tight">-{discount}%</span>
-                </div>
-              </div>
-            );
-          } else if (discount > 0) {
-            return (
-              <div className="px-2 py-1 bg-slate-700/80 backdrop-blur-sm rounded-lg border border-slate-600/50">
-                <span className="text-xs text-slate-300 font-medium">-{discount}%</span>
-              </div>
-            );
-          } else {
-            return (
-              <div className="px-2 py-1 bg-slate-800/60 backdrop-blur-sm rounded-lg border border-slate-700/50">
-                <span className="text-xs text-slate-400">Full Price</span>
-              </div>
-            );
-          }
-        })()
-      ) : (
-        game.isFavorite && (
-          <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
-            <Heart className="w-4 h-4 text-red-400 fill-red-400" />
-          </div>
-        )
-      )}
-    </div>
-    
-    {/* --- INICIO DEL CAMBIO: IMAGEN SIN MÁRGENES --- */}
-    <div className="relative h-48 overflow-hidden">
-      <img 
-        src={game.image} 
-        alt={game.title}
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-    </div>
-    {/* --- FIN DEL CAMBIO --- */}
-    
-    <CardContent className="p-5">
-      <h3 className="font-bold text-white mb-3 truncate group-hover:text-violet-400 transition-colors duration-300">
-        {game.title}
-      </h3>
-      
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {game.genres.slice(0, 3).map(genre => (
-          <Badge 
-            key={genre} 
-            variant="secondary" 
-            className={`text-xs text-white px-2 py-1 rounded-full ${genreColors[genre] || 'bg-slate-600'} shadow-sm`}
-          >
-            {genre}
-          </Badge>
-        ))}
-      </div>
-      
-      <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-        <span className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-          {game.releaseDate}
-        </span>
-        {game.steamRating && (
-          <span className="flex items-center gap-1 text-green-400 font-medium">
-            <Star className="w-3 h-3 fill-green-400" />
-            {game.steamRating}
-          </span>
-        )}
-      </div>
-      
-      <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
-        <div className="flex gap-1">
-          {game.platforms.windows && <Monitor className="w-3 h-3" />}
-          {game.platforms.mac && <Apple className="w-3 h-3" />}
-          {game.platforms.linux && <Terminal className="w-3 h-3" />}
-        </div>
-        {game.price && !game.isFree && (
-          <span className="text-violet-400 font-medium">{game.price.formattedFinal}</span>
-        )}
-        {game.isFree && <span className="text-green-400 font-medium">Free</span>}
-      </div>
-      
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleEditGame(game)}
-          className="flex-1 px-3 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-lg transition-all duration-300 group/btn"
-        >
-          <Edit className="w-4 h-4 mx-auto group-hover/btn:scale-110 transition-transform" />
-        </button>
-        <button
-          onClick={() => handleFavoriteToggle(game.id)}
-          className={`flex-1 px-3 py-2 rounded-lg transition-all duration-300 group/btn ${
-            game.isFavorite 
-              ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
-              : 'bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white'
-          }`}
-        >
-          <Heart className={`w-4 h-4 mx-auto group-hover/btn:scale-110 transition-transform ${game.isFavorite ? 'fill-red-400' : ''}`} />
-        </button>
-        <button
-          onClick={() => handleDeleteGame(game.id)}
-          className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded-lg transition-all duration-300 group/btn"
-        >
-          <Trash2 className="w-4 h-4 mx-auto group-hover/btn:scale-110 transition-transform" />
-        </button>
-      </div>
-    </CardContent>
-  </Card>
-))}
+                    <Card 
+                      key={game.id} 
+                      className="group bg-slate-900/50 backdrop-blur-sm border-slate-800/50 overflow-hidden hover:shadow-2xl hover:shadow-violet-500/20 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1 relative rounded-t-lg"
+                      style={{
+                        animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
+                      }}
+                    >
+                      {/* --- BADGES SUPERIORES --- */}
+                      {/* Status Badge */}
+                      <div className="absolute top-3 left-3 z-10">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                          {game.status}
+                        </div>
+                      </div>
+                      
+                      {/* --- PUNTUACIÓN EN CAJA CON ICONO Y NÚMERO --- */}
+                      {game.userRating > 0 && (
+                        <div className="absolute top-3 right-3 z-10 bg-slate-900/80 backdrop-blur-sm rounded-lg border border-slate-700/50 p-2 shadow-lg flex items-center gap-1.5">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          <span className="text-xs text-yellow-400 font-medium leading-none">
+                            {game.userRating}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* --- Badge de Favorito o Descuento (posición dinámica) --- */}
+                      <div className={`absolute ${game.userRating > 0 ? 'top-14' : 'top-3'} right-3 z-10`}>
+                        {game.status === 'Wishlist' && game.price && !game.isFree ? (
+                          (() => {
+                            const discount = game.price.discountPercent || 0;
+                            if (discount > 50) {
+                              return (
+                                <div className="relative group">
+                                  <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                                  <div className="relative px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg shadow-green-500/25 border border-green-400/30">
+                                    <span className="text-white font-bold text-sm leading-tight">-{discount}%</span>
+                                  </div>
+                                </div>
+                              );
+                            } else if (discount > 0) {
+                              return (
+                                <div className="px-2 py-1 bg-slate-700/80 backdrop-blur-sm rounded-lg border border-slate-600/50">
+                                  <span className="text-xs text-slate-300 font-medium">-{discount}%</span>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div className="px-2 py-1 bg-slate-800/60 backdrop-blur-sm rounded-lg border border-slate-700/50">
+                                  <span className="text-xs text-slate-400">Full Price</span>
+                                </div>
+                              );
+                            }
+                          })()
+                        ) : (
+                          game.isFavorite && (
+                            <div className="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-500/30">
+                              <Heart className="w-4 h-4 text-red-400 fill-red-400" />
+                            </div>
+                          )
+                        )}
+                      </div>
+                      
+                      {/* --- IMAGEN SIN MÁRGENES --- */}
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={game.image} 
+                          alt={game.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      </div>
+                      
+                      <CardContent className="p-5">
+                        <h3 className="font-bold text-white mb-3 truncate group-hover:text-violet-400 transition-colors duration-300">
+                          {game.title}
+                        </h3>
+                        
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {game.genres.slice(0, 3).map(genre => (
+                            <Badge 
+                              key={genre} 
+                              variant="secondary" 
+                              className={`text-xs text-white px-2 py-1 rounded-full ${genreColors[genre] || 'bg-slate-600'} shadow-sm`}
+                            >
+                              {genre}
+                            </Badge>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
+                          <span className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                            {game.releaseDate}
+                          </span>
+                          {game.steamRating && (
+                            <span className="flex items-center gap-1 text-green-400 font-medium">
+                              <Star className="w-3 h-3 fill-green-400" />
+                              {game.steamRating}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                          <div className="flex gap-1">
+                            {game.platforms.windows && <Monitor className="w-3 h-3" />}
+                            {game.platforms.mac && <Apple className="w-3 h-3" />}
+                            {game.platforms.linux && <Terminal className="w-3 h-3" />}
+                          </div>
+                          {game.price && !game.isFree && (
+                            <span className="text-violet-400 font-medium">{game.price.formattedFinal}</span>
+                          )}
+                          {game.isFree && <span className="text-green-400 font-medium">Free</span>}
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditGame(game)}
+                            className="flex-1 px-3 py-2 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-lg transition-all duration-300 group/btn"
+                          >
+                            <Edit className="w-4 h-4 mx-auto group-hover/btn:scale-110 transition-transform" />
+                          </button>
+                          <button
+                            onClick={() => handleFavoriteToggle(game.id)}
+                            className={`flex-1 px-3 py-2 rounded-lg transition-all duration-300 group/btn ${
+                              game.isFavorite 
+                                ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400' 
+                                : 'bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 mx-auto group-hover/btn:scale-110 transition-transform ${game.isFavorite ? 'fill-red-400' : ''}`} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteGame(game.id)}
+                            className="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded-lg transition-all duration-300 group/btn"
+                          >
+                            <Trash2 className="w-4 h-4 mx-auto group-hover/btn:scale-110 transition-transform" />
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -1096,6 +1096,7 @@ export default function Home() {
               </div>
             )}
 
+            {/* Empty state */}
             {filteredGames.length === 0 && (!searchMode || steamSearchResults.length === 0) && (
               <div className="text-center py-16">
                 <div className="relative inline-block mb-6">
@@ -1120,131 +1121,132 @@ export default function Home() {
       </div>
 
       {/* Edit Dialog */}
-<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-  <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
-    <DialogHeader className="pb-6">
-      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
-        Edit Game
-      </DialogTitle>
-    </DialogHeader>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
+              Edit Game
+            </DialogTitle>
+          </DialogHeader>
 
-    {editingGame && (
-      <div className="space-y-6">
-        <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-          <div className="flex items-center gap-4">
-            <img 
-              src={editingGame.image} 
-              alt={editingGame.title}
-              className="w-16 h-12 object-cover rounded-lg"
-            />
-            <div>
-              <h3 className="font-bold text-white">{editingGame.title}</h3>
-              <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
-            </div>
-          </div>
-        </div>
+          {editingGame && (
+            <div className="space-y-6">
+              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src={editingGame.image} 
+                    alt={editingGame.title}
+                    className="w-16 h-12 object-cover rounded-lg"
+                  />
+                  <div>
+                    <h3 className="font-bold text-white">{editingGame.title}</h3>
+                    <p className="text-sm text-slate-400">{editingGame.releaseDate}</p>
+                  </div>
+                </div>
+              </div>
 
-        {editingGame.description && (
-          <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
-            {editingGame.description}
-          </p>
-        )}
+              {editingGame.description && (
+                <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
+                  {editingGame.description}
+                </p>
+              )}
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
-              Status
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['Pending', 'Playing', 'Completed', 'Wishlist'] as const).map((status) => {
-                const Icon = { Pending: Clock, Playing: Play, Completed: CheckCircle, Wishlist: Star }[status];
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => setEditingGame({ ...editingGame, status })}
-                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium transition-all duration-300 ${
-                      editingGame.status === status
-                        ? `text-white shadow-lg border-transparent ${statusColors[status]}`
-                        : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-white border border-slate-700/50'
-                    }`}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+                    <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
+                    Status
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['Pending', 'Playing', 'Completed', 'Wishlist'] as const).map((status) => {
+                      const Icon = { Pending: Clock, Playing: Play, Completed: CheckCircle, Wishlist: Star }[status];
+                      return (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => setEditingGame({ ...editingGame, status })}
+                          className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium transition-all duration-300 ${
+                            editingGame.status === status
+                              ? `text-white shadow-lg border-transparent ${statusColors[status]}`
+                              : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-white border border-slate-700/50'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {status}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                    Custom List
+                  </label>
+                  <Select 
+                    value={editingGame.list} 
+                    onValueChange={(value: string) => 
+                      setEditingGame({...editingGame, list: value})
+                    }
                   >
-                    <Icon className="w-4 h-4" />
-                    {status}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                    <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
+                      <SelectItem value="None" className="hover:bg-slate-800/50">None</SelectItem>
+                      {customLists.map(list => (
+                        <SelectItem key={list.id} value={list.name} className="hover:bg-slate-800/50">
+                          {list.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-              Custom List
-            </label>
-            <Select 
-              value={editingGame.list} 
-              onValueChange={(value: string) => 
-                setEditingGame({...editingGame, list: value})
-              }
-            >
-              <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
-                <SelectItem value="None" className="hover:bg-slate-800/50">None</SelectItem>
-                {customLists.map(list => (
-                  <SelectItem key={list.id} value={list.name} className="hover:bg-slate-800/50">
-                    {list.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              Personal Rating
-            </label>
-            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-              <div className="flex items-center justify-between mb-3">
-                <StarRating 
-                  value={editingGame.userRating} 
-                  onChange={(value) => setEditingGame({...editingGame, userRating: value})}
-                  size="lg"
-                />
-                <span className="text-sm text-yellow-400 font-medium">
-                  {editingGame.userRating}/5 stars
-                </span>
+                <div>
+                  <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                    Personal Rating
+                  </label>
+                  <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                    <div className="flex items-center justify-between mb-3">
+                      <StarRating 
+                        value={editingGame.userRating} 
+                        onChange={(value) => setEditingGame({...editingGame, userRating: value})}
+                        size="lg"
+                      />
+                      <span className="text-sm text-yellow-400 font-medium">
+                        {editingGame.userRating}/5 stars
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Click on the stars to rate this game
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-slate-500">
-                Click on the stars to rate this game
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  onClick={saveEditedGame}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  Save Changes
+                </button>
+                <button 
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="flex-1 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl transition-all duration-300 border border-slate-700/50"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
-          </div>
-        </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-        <div className="flex gap-3 pt-4">
-          <button 
-            onClick={saveEditedGame}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-[1.02]"
-          >
-            Save Changes
-          </button>
-          <button 
-            onClick={() => setIsEditDialogOpen(false)}
-            className="flex-1 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white rounded-xl transition-all duration-300 border border-slate-700/50"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )}
-  </DialogContent>
-</Dialog>
-
+      {/* Filter Dialog */}
       <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader className="pb-6">
@@ -1290,6 +1292,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
+      {/* Create Custom List Dialog */}
       <Dialog open={showCreateListDialog} onOpenChange={setShowCreateListDialog}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
           <DialogHeader className="pb-6">
@@ -1346,6 +1349,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
+      {/* Add CSS animations */}
       <style jsx>{`
         @keyframes fadeInUp {
           from {

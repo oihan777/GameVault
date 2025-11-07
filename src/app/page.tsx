@@ -1126,22 +1126,28 @@ export default function Home() {
               <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
               Status
             </label>
-            <Select 
-              value={editingGame.status} 
-              onValueChange={(value: Game['status']) => 
-                setEditingGame({...editingGame, status: value})
-              }
-            >
-              <SelectTrigger className="bg-slate-800/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 h-12 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50">
-                <SelectItem value="Pending" className="hover:bg-slate-800/50">Pending</SelectItem>
-                <SelectItem value="Playing" className="hover:bg-slate-800/50">Playing</SelectItem>
-                <SelectItem value="Completed" className="hover:bg-slate-800/50">Completed</SelectItem>
-                <SelectItem value="Wishlist" className="hover:bg-slate-800/50">Wishlist</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* --- INICIO DEL CAMBIO: BOTONES DE ESTADO --- */}
+            <div className="grid grid-cols-2 gap-2">
+              {(['Pending', 'Playing', 'Completed', 'Wishlist'] as const).map((status) => {
+                const Icon = { Pending: Clock, Playing: Play, Completed: CheckCircle, Wishlist: Star }[status];
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setEditingGame({ ...editingGame, status })}
+                    className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg font-medium transition-all duration-300 ${
+                      editingGame.status === status
+                        ? `text-white shadow-lg border-transparent ${statusColors[status]}`
+                        : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-white border border-slate-700/50'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {status}
+                  </button>
+                );
+              })}
+            </div>
+            {/* --- FIN DEL CAMBIO --- */}
           </div>
 
           <div>

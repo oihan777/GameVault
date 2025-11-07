@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react' // Importé useMemo
 import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StarRating } from '@/components/ui/star-rating'
 import { SortControls } from '@/components/ui/sort-controls'
+import { Checkbox } from '@/components/ui/checkbox' // Importé Checkbox
 
 interface Game {
   id: string
@@ -112,16 +113,25 @@ export default function Home() {
   const [showCreateListDialog, setShowCreateListDialog] = useState(false)
   const [newListName, setNewListName] = useState('')
   const [newListColor, setNewListColor] = useState('#6366f1')
-  const [searchMode, setSearchMode] = useState(false) // New state for search mode
+  const [searchMode, setSearchMode] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  
+  // --- NUEVOS ESTADOS PARA LOS FILTROS DE GÉNERO ---
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
 
-  // Add click outside handler for search results
+  // --- OBTENER TODOS LOS GÉNEROS ÚNICOS ---
+  const allGenres = useMemo(() => {
+    const genres = new Set<string>()
+    games.forEach(game => game.genres.forEach(genre => genres.add(genre)))
+    return Array.from(genres).sort()
+  }, [games])
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       if (!target.closest('.search-container')) {
-        // Only hide dropdown, keep search results in All Games
         setShowSearchResults(false)
       }
     }
@@ -130,7 +140,6 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Reset search mode when filter changes
   useEffect(() => {
     if (selectedFilter !== 'all') {
       setSearchMode(false)
@@ -138,7 +147,6 @@ export default function Home() {
     }
   }, [selectedFilter])
 
-  // Load games from database on mount
   useEffect(() => {
     loadGames()
     loadCustomLists()
@@ -168,7 +176,6 @@ export default function Home() {
     }
   }
 
-  // Update sidebar counts when games change
   const sidebarItems = [
     { id: 'all', label: 'All Games', icon: Library, count: games.length },
     { id: 'pending', label: 'Pending', icon: Clock, count: games.filter(g => g.status === 'Pending').length },
@@ -177,6 +184,7 @@ export default function Home() {
     { id: 'wishlist', label: 'Wishlist', icon: Star, count: games.filter(g => g.status === 'Wishlist').length }
   ]
 
+  // --- ACTUALICÉ LA LÓGICA DE FILTRADO PARA INCLUIR GÉNEROS ---
   const filteredGames = games.filter(game => {
     const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase())
     
@@ -186,12 +194,13 @@ export default function Home() {
     } else if (['pending', 'playing', 'completed', 'wishlist'].includes(selectedFilter)) {
       matchesFilter = game.status.toLowerCase() === selectedFilter
     } else {
-      // Custom list filter
       const customList = customLists.find(list => list.id === selectedFilter)
       matchesFilter = customList ? game.list === customList.name : false
     }
+
+    const matchesGenre = selectedGenres.length === 0 || game.genres.some(g => selectedGenres.includes(g))
     
-    return matchesFilter && (selectedFilter === 'all' ? !searchQuery || !searchMode : matchesSearch)
+    return matchesFilter && matchesGenre && (selectedFilter === 'all' ? !searchQuery || !searchMode : matchesSearch)
   }).sort((a, b) => {
     switch (sortBy) {
       case 'title-asc':
@@ -257,7 +266,6 @@ export default function Home() {
       if (response.ok) {
         const newGame = await response.json()
         setGames(prev => [newGame, ...prev])
-        // Remove from search results after adding
         setSteamSearchResults(prev => prev.filter(game => game.steamId !== steamGame.steamId))
       }
     } catch (error) {
@@ -332,7 +340,6 @@ export default function Home() {
       linkElement.click()
       document.body.removeChild(linkElement)
       
-      // Show success message
       alert('Library exported successfully!')
     } catch (error) {
       console.error('Failed to export library:', error)
@@ -351,25 +358,20 @@ export default function Home() {
       const text = await file.text()
       const data = JSON.parse(text)
       
-      // Validate data structure
       if (!data.games || !Array.isArray(data.games)) {
         throw new Error('Invalid file format')
       }
       
-      // Import games using the two-step process: Create, then Update.
       const importPromises = data.games.map(async (gameData: any) => {
-        // Check if game already exists in the current library
         const existingGame = games.find(g => g.steamId === gameData.steamId)
         if (existingGame) {
           console.log(`Skipping already imported game: ${gameData.title}`)
-          return null // Skip existing games
+          return null
         }
         
-        // --- PASO 1: Crear el juego en la base de datos ---
         const createResponse = await fetch('/api/games', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // Enviamos los datos del juego. El API usará los datos básicos para crearlo.
           body: JSON.stringify(gameData)
         })
         
@@ -380,12 +382,11 @@ export default function Home() {
         
         const newGame = await createResponse.json()
         
-        // --- PASO 2: Actualizar el juego con los campos personalizados ---
         const updateResponse = await fetch(`/api/games/${newGame.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            status: gameData.status || 'Pending', // Usamos el valor del JSON o un defecto
+            status: gameData.status || 'Pending',
             userRating: gameData.userRating || 0,
             list: gameData.list || 'None',
             isFavorite: gameData.isFavorite || false
@@ -393,11 +394,8 @@ export default function Home() {
         })
 
         if (updateResponse.ok) {
-          // Devolvemos el juego completamente actualizado
           return await updateResponse.json()
         } else {
-          // Si la actualización falla, devolvemos el juego recién creado (sin datos personalizados)
-          // para que al menos se añada a la biblioteca.
           console.warn(`Game created but failed to update custom data for: ${gameData.title}`)
           return newGame
         }
@@ -405,7 +403,6 @@ export default function Home() {
       
       const importedGames = (await Promise.all(importPromises)).filter(Boolean)
       
-      // Import custom lists (this part was already correct)
       if (data.customLists && Array.isArray(data.customLists)) {
         const listPromises = data.customLists.map(async (listData: any) => {
           const existingList = customLists.find(l => l.name === listData.name)
@@ -440,7 +437,6 @@ export default function Home() {
       alert('Failed to import library. Please check the file format and try again.')
     } finally {
       setIsImporting(false)
-      // Reset file input
       event.target.value = ''
     }
   }
@@ -547,6 +543,15 @@ export default function Home() {
     }
   }
 
+  // --- FUNCIÓN PARA MANEJAR EL CAMBIO DE GÉNEROS ---
+  const handleGenreChange = (genre: string, checked: boolean) => {
+    setSelectedGenres(prev => 
+      checked 
+        ? [...prev, genre]
+        : prev.filter(g => g !== genre)
+    )
+  }
+
   return (
   <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex zoom-[70%]">      {/* Sidebar */}
       <div className="w-72 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800/50 p-6">
@@ -638,7 +643,6 @@ export default function Home() {
             <span className="font-medium">Create New List</span>
           </button>
           
-          {/* Export/Import Section */}
           <div className="mt-6 pt-6 border-t border-slate-800/50">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-slate-400">Library Management</h3>
@@ -690,9 +694,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Navigation */}
         <header className="bg-slate-900/30 backdrop-blur-xl border-b border-slate-800/50 p-6">
           <div className="max-w-4xl mx-auto relative search-container">
             <div className="relative group">
@@ -723,7 +725,6 @@ export default function Home() {
               )}
             </div>
             
-            {/* Steam Search Results Dropdown - Only show for other filters */}
             {showSearchResults && steamSearchResults.length > 0 && selectedFilter !== 'all' && (
               <div className="absolute top-full left-0 right-0 mt-3 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-violet-500/10 max-h-96 overflow-y-auto z-50">
                 <div className="p-3">
@@ -761,7 +762,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Game Grid */}
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
@@ -781,20 +781,34 @@ export default function Home() {
               </div>
               
               <div className="flex items-center gap-3">
+                {/* --- CAMBIO 1: ARREGLAR COLOR DEL TEXTO EN SORTCONTROLS --- */}
                 <SortControls 
                   value={sortBy} 
                   onChange={setSortBy}
-                  className="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30"
+                  className="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 text-white" // Añadí text-white
                 />
                 
-                <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30">
-                  <Filter className="w-4 h-4 text-violet-400" />
-                  <span className="text-sm text-slate-400">Filters</span>
-                </div>
+                {/* --- CAMBIO 2: BOTÓN DE FILTRO FUNCIONAL --- */}
+                <Button
+                  variant="outline"
+                  onClick={() => setIsFilterDialogOpen(true)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 border ${
+                    selectedGenres.length > 0 
+                      ? 'bg-violet-500/20 border-violet-500/50 text-violet-300 hover:bg-violet-500/30' 
+                      : 'bg-slate-800/30 backdrop-blur-sm border-slate-700/30 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="text-sm font-medium">Filters</span>
+                  {selectedGenres.length > 0 && (
+                    <span className="px-1.5 py-0.5 bg-violet-500 text-white text-xs rounded-full">
+                      {selectedGenres.length}
+                    </span>
+                  )}
+                </Button>
               </div>
             </div>
             
-            {/* Show library games */}
             {filteredGames.length > 0 && (
               <div className="mb-8">
                 {selectedFilter === 'all' && searchMode && (
@@ -812,8 +826,6 @@ export default function Home() {
     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
   }}
 >
-  {/* --- BADGES SUPERIORES --- */}
-  {/* Status Badge */}
   <div className="absolute top-3 left-3 z-10">
     <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -821,7 +833,6 @@ export default function Home() {
     </div>
   </div>
   
-  {/* --- INICIO DEL CAMBIO: VALORACIÓN POR ESTRELLAS EN LA ESQUINA SUPERIOR DERECHA --- */}
   {game.userRating > 0 && (
     <div className="absolute top-3 right-3 z-10">
       <div className="bg-slate-900/80 backdrop-blur-sm rounded-lg border border-slate-700/50 p-2 shadow-lg flex items-center gap-1.5">
@@ -837,9 +848,7 @@ export default function Home() {
       </div>
     </div>
   )}
-  {/* --- FIN DEL CAMBIO --- */}
   
-  {/* --- Badge de Favorito o Descuento (ligeramente desplazado hacia abajo para no solaparse) --- */}
   <div className="absolute top-14 right-3 z-10">
     {game.status === 'Wishlist' && game.price && !game.isFree ? (
       (() => {
@@ -960,7 +969,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Show Steam search results in All Games section */}
             {selectedFilter === 'all' && searchMode && steamSearchResults.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-6">
@@ -1062,7 +1070,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Empty state */}
             {filteredGames.length === 0 && (!searchMode || steamSearchResults.length === 0) && (
               <div className="text-center py-16">
                 <div className="relative inline-block mb-6">
@@ -1097,7 +1104,6 @@ export default function Home() {
 
     {editingGame && (
       <div className="space-y-6">
-        {/* 🧩 Tarjeta con imagen, título y fecha */}
         <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
           <div className="flex items-center gap-4">
             <img 
@@ -1112,21 +1118,18 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 🧾 Descripción debajo de la tarjeta */}
         {editingGame.description && (
           <p className="text-sm text-slate-400 leading-relaxed bg-slate-800/40 p-3 rounded-lg border border-slate-700/40 line-clamp-5">
             {editingGame.description}
           </p>
         )}
 
-        {/* Resto del formulario */}
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-slate-300 mb-3 block flex items-center gap-2">
               <div className="w-2 h-2 bg-violet-400 rounded-full"></div>
               Status
             </label>
-            {/* --- INICIO DEL CAMBIO: BOTONES DE ESTADO --- */}
             <div className="grid grid-cols-2 gap-2">
               {(['Pending', 'Playing', 'Completed', 'Wishlist'] as const).map((status) => {
                 const Icon = { Pending: Clock, Playing: Play, Completed: CheckCircle, Wishlist: Star }[status];
@@ -1147,7 +1150,6 @@ export default function Home() {
                 );
               })}
             </div>
-            {/* --- FIN DEL CAMBIO --- */}
           </div>
 
           <div>
@@ -1217,6 +1219,52 @@ export default function Home() {
   </DialogContent>
 </Dialog>
 
+      {/* --- NUEVO DIÁLOGO DE FILTROS POR GÉNERO --- */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto max-h-[80vh] overflow-y-auto">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
+              <Filter className="w-6 h-6 text-violet-400" />
+              Filter by Genre
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {allGenres.map(genre => (
+                <div key={genre} className="flex items-center space-x-3 rounded-lg border border-slate-700/50 p-3 hover:bg-slate-800/50 transition-colors">
+                  <Checkbox
+                    id={genre}
+                    checked={selectedGenres.includes(genre)}
+                    onCheckedChange={(checked) => handleGenreChange(genre, checked as boolean)}
+                  />
+                  <label 
+                    htmlFor={genre} 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                  >
+                    {genre}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button 
+                onClick={() => setSelectedGenres([])}
+                className="flex-1"
+                variant="outline"
+              >
+                Clear All
+              </Button>
+              <Button 
+                onClick={() => setIsFilterDialogOpen(false)}
+                className="flex-1 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700"
+              >
+                Apply Filters ({selectedGenres.length})
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Create Custom List Dialog */}
       <Dialog open={showCreateListDialog} onOpenChange={setShowCreateListDialog}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
@@ -1274,7 +1322,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Add CSS animations */}
       <style jsx>{`
         @keyframes fadeInUp {
           from {

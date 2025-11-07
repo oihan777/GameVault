@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock } from 'lucide-react'
+import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -154,6 +154,9 @@ export default function Home() {
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false)
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
 
+  // --- NUEVO ESTADO PARA EL BOTÓN FLOTANTE ---
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
   const allGenres = useMemo(() => {
     const genres = new Set<string>()
     games.forEach(game => game.genres.forEach(genre => genres.add(genre)))
@@ -182,6 +185,20 @@ export default function Home() {
   useEffect(() => {
     loadGames()
     loadCustomLists()
+  }, [])
+
+  // --- NUEVO EFECTO PARA DETECTAR EL SCROLL ---
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 200)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // Comprobar la posición inicial al cargar
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   const loadGames = async () => {
@@ -582,7 +599,14 @@ export default function Home() {
     )
   }
 
-  // Asegúrate de que todas las funciones y lógica estén correctamente cerradas antes del return.
+  // --- FUNCIÓN PARA EL BOTÓN FLOTANTE ---
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex zoom-[70%]">
       {/* Sidebar */}
@@ -1121,6 +1145,16 @@ export default function Home() {
         </main>
       </div>
 
+      {/* --- BOTÓN FLOTANTE PARA VOLVER ARRIBA --- */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 p-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl hover:shadow-violet-500/40 transition-all duration-300 hover:scale-110 group"
+        >
+          <ChevronUp className="w-6 h-6" />
+        </button>
+      )}
+
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
@@ -1358,6 +1392,16 @@ export default function Home() {
             transform: translateY(20px);
           }
           to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes bounce-in {
+          0%, 60%, 100% {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          50% {
             opacity: 1;
             transform: translateY(0);
           }

@@ -820,6 +820,8 @@ export default function Home() {
     animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
   }}
 >
+  {/* --- BADGES SUPERIORES --- */}
+  {/* Status Badge */}
   <div className="absolute top-3 left-3 z-10">
     <div className={`px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg ${statusColors[game.status]} flex items-center gap-1`}>
       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -827,23 +829,20 @@ export default function Home() {
     </div>
   </div>
   
+  {/* --- INICIO DEL CAMBIO: NOTA POR ESTRELLAS SIMPLIFICADA --- */}
   {game.userRating > 0 && (
-    <div className="absolute top-3 right-3 z-10">
-      <div className="bg-slate-900/80 backdrop-blur-sm rounded-lg border border-slate-700/50 p-2 shadow-lg flex items-center gap-1.5">
-        <StarRating 
-          value={game.userRating} 
-          onChange={(value) => handleRatingChange(game.id, value)}
-          size="sm"
-          className="scale-90"
-        />
-        <span className="text-xs text-yellow-400 font-medium leading-none">
-          {game.userRating}
-        </span>
-      </div>
+    <div className="absolute top-3 right-3 z-10 drop-shadow-lg">
+      <StarRating 
+        value={game.userRating} 
+        onChange={(value) => handleRatingChange(game.id, value)}
+        size="sm"
+        className="scale-90"
+      />
     </div>
   )}
+  {/* --- FIN DEL CAMBIO --- */}
   
-  {/* --- INICIO DEL CAMBIO: POSICIÓN DINÁMICA DEL BADGE DE FAVORITO/DESCUENTO --- */}
+  {/* --- Badge de Favorito o Descuento (posición dinámica) --- */}
   <div className={`absolute ${game.userRating > 0 ? 'top-14' : 'top-3'} right-3 z-10`}>
     {game.status === 'Wishlist' && game.price && !game.isFree ? (
       (() => {
@@ -879,18 +878,17 @@ export default function Home() {
       )
     )}
   </div>
-  {/* --- FIN DEL CAMBIO --- */}
   
-  <div className="relative">
-    <div className="aspect-video overflow-hidden bg-slate-950">
-      <img 
-        src={game.image} 
-        alt={game.title}
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-    </div>
+  {/* --- INICIO DEL CAMBIO: IMAGEN DE LA TARJETA REDISEÑADA --- */}
+  <div className="relative h-48 overflow-hidden rounded-t-lg">
+    <img 
+      src={game.image} 
+      alt={game.title}
+      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
   </div>
+  {/* --- FIN DEL CAMBIO --- */}
   
   <CardContent className="p-5">
     <h3 className="font-bold text-white mb-3 truncate group-hover:text-violet-400 transition-colors duration-300">
@@ -984,24 +982,22 @@ export default function Home() {
                         animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
                       }}
                     >
-                      <div className="relative">
-                        <div className="aspect-video overflow-hidden bg-slate-950">
-                          <img 
-                            src={game.image} 
-                            alt={game.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        </div>
-                        <div className="absolute top-3 right-3">
-                          <button
-                            onClick={() => addGameToLibrary(game)}
-                            className="px-3 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-sm font-medium rounded-lg shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-105"
-                          >
-                            <Plus className="w-3 h-3 inline mr-1" />
-                            Add
-                          </button>
-                        </div>
+                      <div className="relative h-48 overflow-hidden rounded-t-lg">
+                        <img 
+                          src={game.image} 
+                          alt={game.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <button
+                          onClick={() => addGameToLibrary(game)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white text-sm font-medium rounded-lg shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 hover:scale-105"
+                        >
+                          <Plus className="w-3 h-3 inline mr-1" />
+                          Add
+                        </button>
                       </div>
                       
                       <CardContent className="p-5">

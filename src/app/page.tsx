@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock, ChevronUp } from 'lucide-react'
+import { Search, Library, Play, CheckCircle, Star, Heart, Plus, Edit, Trash2, X, Loader2, Monitor, Apple, Terminal, Sparkles, Gamepad2, TrendingUp, Filter, Grid3x3, List, Download, Upload, Clock, ChevronUp, ExternalLink } from 'lucide-react' // <-- CAMBIO: Añadido ExternalLink
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -1186,10 +1186,22 @@ export default function Home() {
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-white max-w-md mx-auto">
-          <DialogHeader className="pb-6">
+          {/* --- CAMBIO: Modificado el DialogHeader para incluir el botón --- */}
+          <DialogHeader className="pb-6 flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
               Edit Game
             </DialogTitle>
+            {editingGame && editingGame.steamId && (
+              <a
+                href={`https://store.steampowered.com/app/${editingGame.steamId}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 text-slate-400 hover:text-white transition-all duration-300"
+                title="View on Steam"
+              >
+                <ExternalLink className="w-5 h-5" />
+              </a>
+            )}
           </DialogHeader>
 
           {editingGame && (

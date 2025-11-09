@@ -157,6 +157,16 @@ export default function Home() {
   // --- NUEVO ESTADO PARA EL BOTÓN FLOTANTE ---
   const [showScrollTop, setShowScrollTop] = useState(false)
 
+  // --- NUEVO CÁLCULO PARA EL ESTADO DE DESCUENTOS DE LA WISHLIST ---
+  const wishlistDiscountStatus = useMemo(() => {
+    const wishlistGames = games.filter(g => g.status === 'Wishlist');
+    const hasHighDiscount = wishlistGames.some(g => g.price && g.price.discountPercent > 50);
+    if (hasHighDiscount) return 'high';
+    const hasAnyDiscount = wishlistGames.some(g => g.price && g.price.discountPercent > 0);
+    if (hasAnyDiscount) return 'low';
+    return 'none';
+  }, [games]);
+
   const allGenres = useMemo(() => {
     const genres = new Set<string>()
     games.forEach(game => game.genres.forEach(genre => genres.add(genre)))
@@ -628,26 +638,44 @@ export default function Home() {
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${
                 selectedFilter === item.id 
                   ? 'bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-white shadow-lg shadow-violet-500/10 border border-violet-500/30' 
-                  : 'hover:bg-slate-800/50 text-slate-400 hover:text-white'
+                  : // --- LÓGICA AÑADIDA PARA LA WISHLIST ---
+                  (item.id === 'wishlist' && wishlistDiscountStatus === 'high')
+                    ? 'bg-gradient-to-r from-green-500/20 to-emerald-600/20 text-green-400 border-green-500/30 shadow-lg shadow-green-500/10'
+                    : (item.id === 'wishlist' && wishlistDiscountStatus === 'low')
+                      ? 'bg-gradient-to-r from-orange-500/20 to-amber-600/20 text-orange-400 border-orange-500/30 shadow-lg shadow-orange-500/10'
+                      : 'hover:bg-slate-800/50 text-slate-400 hover:text-white' // Estilo por defecto
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg transition-all duration-300 ${
                   selectedFilter === item.id 
                     ? 'bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg' 
-                    : 'bg-slate-800 group-hover:bg-slate-700'
+                    : // --- LÓGICA AÑADIDA PARA EL ICONO DE LA WISHLIST ---
+                    (item.id === 'wishlist' && wishlistDiscountStatus !== 'none')
+                      ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg' // Color de descuento para el icono
+                      : 'bg-slate-800 group-hover:bg-slate-700'
                 }`}>
                   <item.icon className="w-4 h-4" />
                 </div>
                 <span className="font-medium">{item.label}</span>
               </div>
-              <span className={`text-sm px-2 py-1 rounded-full transition-all duration-300 ${
-                selectedFilter === item.id 
-                  ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white' 
-                  : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
-              }`}>
-                {item.count}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className={`text-sm px-2 py-1 rounded-full transition-all duration-300 ${
+                  selectedFilter === item.id 
+                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white' 
+                    : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
+                }`}>
+                  {item.count}
+                </span>
+                {/* --- NUEVO INDICADOR VISUAL DE DESCUENTO --- */}
+                {item.id === 'wishlist' && wishlistDiscountStatus !== 'none' && (
+                  <div className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
+                    wishlistDiscountStatus === 'high' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'
+                  }`}>
+                    %
+                  </div>
+                )}
+              </div>
             </button>
           ))}
         </nav>
